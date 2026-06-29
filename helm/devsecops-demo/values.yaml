@@ -25,7 +25,7 @@ securityContext:
 
 containerSecurityContext:
   allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: true
+  readOnlyRootFilesystem: false
   capabilities:
     drop:
       - ALL
@@ -37,3 +37,11 @@ monitoring:
   enabled: true
   path: /metrics
   port: 8000
+
+serviceAccount:
+  name: devsecops-sa
+
+secrets:
+  enabled: false
+  providerClass: devsecops-aws-secrets
+  mountPath: /mnt/secrets

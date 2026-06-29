@@ -20,6 +20,7 @@ spec:
         prometheus.io/path: "{{ .Values.monitoring.path }}"
         {{- end }}
     spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
       securityContext:
         runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
         runAsUser: {{ .Values.securityContext.runAsUser }}
@@ -42,3 +43,29 @@ spec:
             readOnlyRootFilesystem: {{ .Values.containerSecurityContext.readOnlyRootFilesystem }}
             capabilities:
               drop: {{ .Values.containerSecurityContext.capabilities.drop }}
+          {{- if .Values.secrets.enabled }}
+          env:
+            - name: APP_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: devsecops-app-secrets
+                  key: APP_SECRET_KEY
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: devsecops-app-secrets
+                  key: DB_PASSWORD
+          volumeMounts:
+            - name: secrets-store
+              mountPath: {{ .Values.secrets.mountPath }}
+              readOnly: true
+          {{- end }}
+      {{- if .Values.secrets.enabled }}
+      volumes:
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ .Values.secrets.providerClass }}
+      {{- end }}
