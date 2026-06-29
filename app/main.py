@@ -1,6 +1,9 @@
 from fastapi import FastAPI, HTTPException
+from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI(title="DevSecOps Demo API")
+
+Instrumentator().instrument(app).expose(app)
 
 ITEMS = {
     1: {"name": "Widget", "price": 9.99},
