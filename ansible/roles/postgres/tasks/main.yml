@@ -1,0 +1,66 @@
+---
+- name: Install PostgreSQL dependencies
+  apt:
+    name:
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+    state: present
+    update_cache: yes
+
+- name: Ensure PostgreSQL is started and enabled
+  service:
+    name: postgresql
+    state: started
+    enabled: yes
+
+- name: Fetch DB password from AWS Secrets Manager
+  command: >
+    aws secretsmanager get-secret-value
+    --secret-id {{ secret_name }}
+    --region {{ aws_region }}
+    --query SecretString
+    --output text
+  register: secret_output
+  changed_when: false
+  no_log: true
+
+- name: Parse DB password from secret
+  set_fact:
+    db_password: "{{ (secret_output.stdout | from_json).DB_PASSWORD }}"
+  no_log: true
+
+- name: Create PostgreSQL database
+  become: yes
+  become_user: postgres
+  postgresql_db:
+    name: "{{ db_name }}"
+    state: present
+
+- name: Create PostgreSQL user
+  become: yes
+  become_user: postgres
+  postgresql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+    priv: "ALL/{{ db_name }}:ALL"
+    state: present
+  no_log: true
+
+- name: Grant database privileges
+  become: yes
+  become_user: postgres
+  postgresql_privs:
+    database: "{{ db_name }}"
+    role: "{{ db_user }}"
+    privs: ALL
+    type: database
+    state: present
+
+- name: Ensure PostgreSQL listens on all interfaces
+  lineinfile:
+    path: /etc/postgresql/14/main/postgresql.conf
+    regexp: "^#?listen_addresses"
+    line: "listen_addresses = 'localhost'"
+    state: present
+  notify: restart postgresql

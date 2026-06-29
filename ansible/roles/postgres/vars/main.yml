@@ -1,0 +1,5 @@
+db_name: devsecops_db
+db_user: devsecops_user
+db_port: 5432
+aws_region: us-east-1
+secret_name: devsecops/app-secrets

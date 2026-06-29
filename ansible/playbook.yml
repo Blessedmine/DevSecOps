@@ -1,0 +1,37 @@
+---
+- name: Configure PostgreSQL Database
+  hosts: database
+  become: yes
+  gather_facts: yes
+
+  vars_prompt:
+    - name: confirm
+      prompt: "This will configure PostgreSQL. Continue? (yes/no)"
+      private: no
+
+  pre_tasks:
+    - name: Abort if not confirmed
+      fail:
+        msg: "Playbook execution cancelled"
+      when: confirm != "yes"
+
+    - name: Display configuration info
+      debug:
+        msg:
+          - "Setting up database: {{ db_name }}"
+          - "Database user: {{ db_user }}"
+          - "AWS Region: {{ aws_region }}"
+          - "Secret: {{ secret_name }}"
+
+  roles:
+    - postgres
+
+  post_tasks:
+    - name: Verify PostgreSQL is running
+      command: pg_isready -p {{ db_port }}
+      register: pg_status
+      changed_when: false
+
+    - name: Display PostgreSQL status
+      debug:
+        msg: "PostgreSQL status: {{ pg_status.stdout }}"
