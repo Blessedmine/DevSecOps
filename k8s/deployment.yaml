@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devsecops-demo
+  labels:
+    app: devsecops-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: devsecops-demo
+  template:
+    metadata:
+      labels:
+        app: devsecops-demo
+    spec:
+      containers:
+        - name: devsecops-demo
+          image: 495599739945.dkr.ecr.us-east-1.amazonaws.com/devsecops-demo:latest
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
