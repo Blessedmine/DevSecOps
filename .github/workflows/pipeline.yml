@@ -2,10 +2,7 @@
 name: DevSecOps Pipeline
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:  # only runs when manually triggered
 
 env:
   AWS_REGION: us-east-1
