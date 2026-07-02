@@ -9,10 +9,10 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "devsecops-tfstate-495599739945"
-    key            = "devsecops/terraform.tfstate"
-    region         = "us-east-1"
-    encrypt        = true
+    bucket  = "devsecops-tfstate-495599739945"
+    key     = "devsecops/terraform.tfstate"
+    region  = "us-east-1"
+    encrypt = true
   }
 }
 
