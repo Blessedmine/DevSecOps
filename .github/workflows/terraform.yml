@@ -130,46 +130,10 @@ jobs:
           terraform workspace select dev
           terraform apply -auto-approve dev.tfplan
 
-  terraform-plan-staging:
-    name: Plan Staging
+  terraform-apply-staging:
+    name: Plan & Apply Staging
     runs-on: ubuntu-latest
     needs: terraform-validate
-    if: github.ref == 'refs/heads/staging'
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.9.5
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Terraform Init
-        working-directory: terraform
-        run: terraform init
-
-      - name: Terraform Plan Staging
-        working-directory: terraform
-        run: |
-          terraform workspace select staging || terraform workspace new staging
-          terraform plan -var-file=environments/staging.tfvars -out=staging.tfplan
-
-      - name: Upload Staging Plan
-        uses: actions/upload-artifact@v4
-        with:
-          name: staging-tfplan
-          path: terraform/staging.tfplan
-
-  terraform-apply-staging:
-    name: Apply Staging
-    runs-on: ubuntu-latest
-    needs: terraform-plan-staging
     if: github.ref == 'refs/heads/staging'
     environment:
       name: staging
@@ -188,20 +152,15 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Download Staging Plan
-        uses: actions/download-artifact@v4
-        with:
-          name: staging-tfplan
-          path: terraform/
-
       - name: Terraform Init
         working-directory: terraform
         run: terraform init
 
-      - name: Terraform Apply Staging
+      - name: Terraform Plan & Apply Staging
         working-directory: terraform
         run: |
-          terraform workspace select staging
+          terraform workspace select staging || terraform workspace new staging
+          terraform plan -var-file=environments/staging.tfvars -out=staging.tfplan
           terraform apply -auto-approve staging.tfplan
 
   terraform-plan-prod:
